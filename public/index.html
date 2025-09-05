@@ -33,15 +33,13 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px; /* space between elements */
-}
-
-     .form-group input,
-     .form-group button {
-       width: 80%;       /* make input & buttons smaller */
-      max-width: 350px; /* prevent too wide */
-}
-
+      gap: 10px;
+    }
+    .form-group input,
+    .form-group button {
+      width: 80%;
+      max-width: 350px;
+    }
     input, button {
       padding: 12px;
       margin: 8px 0;
@@ -93,22 +91,33 @@
       box-shadow: 0 0 10px rgba(0,123,255,0.3);
       transform: translateX(5px);
     }
+    #announcement {
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      margin: 15px 0;
+      padding: 10px;
+      background: #ffe082;
+      border-radius: 10px;
+      display: none;
+    }
   </style>
 </head>
 <body>
   <h1>Queue Management System (API)</h1>
   <div class="container">
-  <div class="form-group">
-    <input type="text" id="name" placeholder="Enter your name">
-    <button onclick="addToQueue()">✨ Get Ticket</button>
-    <button onclick="callNext()">📢 Call Next</button>
-    <button onclick="resetQueue()">🔄 Reset Queue</button>
+    <div class="form-group">
+      <input type="text" id="name" placeholder="Enter your name">
+      <button onclick="addToQueue()">✨ Get Ticket</button>
+      <button onclick="callNext()">📢 Call Next</button>
+      <button onclick="resetQueue()">🔄 Reset Queue</button>
+    </div>
+
+    <div id="announcement"></div>
+
+    <h3>Current Queue:</h3>
+    <ul id="queueList"></ul>
   </div>
-
-  <h3>Current Queue:</h3>
-  <ul id="queueList"></ul>
-</div>
-
 
   <script>
     const apiUrl = 'http://localhost:3000/api/queue';
@@ -144,13 +153,28 @@
       const res = await fetch(`${apiUrl}/call`, { method: 'POST' });
       const data = await res.json();
       if (data.error) return alert(data.error);
-      alert(`Calling ticket #${data.ticketNumber} - ${data.name}`);
+
+      // Show announcement on screen
+      const announcement = document.getElementById('announcement');
+      announcement.textContent = `📢 Now serving ticket #${data.ticketNumber} - ${data.name}`;
+      announcement.style.display = "block";
+
+      // Voice announcement
+      const msg = new SpeechSynthesisUtterance(
+        `Now serving ticket number ${data.ticketNumber}, ${data.name}`
+      );
+      msg.lang = "en-US"; // You can change to "fil-PH" if supported
+      msg.rate = 0.9;
+      msg.pitch = 1;
+      window.speechSynthesis.speak(msg);
+
       fetchQueue();
     }
 
     async function resetQueue() {
       await fetch(`${apiUrl}/reset`, { method: 'POST' });
       alert('Queue reset successfully');
+      document.getElementById('announcement').style.display = "none";
       fetchQueue();
     }
 
